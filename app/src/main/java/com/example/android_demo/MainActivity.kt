@@ -1,9 +1,8 @@
 package com.example.android_demo
 
-import android.graphics.BitmapFactory
 import android.opengl.GLSurfaceView
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import com.example.android_demo.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {

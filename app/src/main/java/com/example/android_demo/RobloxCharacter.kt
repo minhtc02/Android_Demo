@@ -55,20 +55,16 @@ class RobloxCharacter {
                232, 74, 128, 128, 64, 64) // Torso UV
 
         // Left Arm: Center(1.5, 0, 0), Width=1, Height=2, Depth=1
-        addBox(1.0f, 1.0f, -0.5f, 2.0f, -1.0f, 0.5f,
-               360, 74, 64, 128, 64, 64) // Left arm UV approx (using right portion of template)
+        addLimb(1.0f, 1.0f, -0.5f, 2.0f, -1.0f, 0.5f, isRightLimb = false)
                
         // Right Arm: Center(-1.5, 0, 0), Width=1, Height=2, Depth=1
-        addBox(-2.0f, 1.0f, -0.5f, -1.0f, -1.0f, 0.5f,
-               73, 74, 64, 128, 64, 64) // Right arm UV
+        addLimb(-2.0f, 1.0f, -0.5f, -1.0f, -1.0f, 0.5f, isRightLimb = true)
                
         // Left Leg: Center(0.5, -2, 0), Width=1, Height=2, Depth=1
-        addBox(0.0f, -1.0f, -0.5f, 1.0f, -3.0f, 0.5f,
-               360, 332, 64, 128, 64, 64) // Left leg UV approx
+        addLimb(0.0f, -1.0f, -0.5f, 1.0f, -3.0f, 0.5f, isRightLimb = false)
                
         // Right Leg: Center(-0.5, -2, 0), Width=1, Height=2, Depth=1
-        addBox(-1.0f, -1.0f, -0.5f, 0.0f, -3.0f, 0.5f,
-               73, 332, 64, 128, 64, 64) // Right leg UV
+        addLimb(-1.0f, -1.0f, -0.5f, 0.0f, -3.0f, 0.5f, isRightLimb = true)
 
         // Head: Center(0, 1.5, 0), Cylinder: Radius=0.5, Height=1
         // Đầu không nằm trong clothing template chuẩn nên set mapping vào một vùng màu để giả lập.
@@ -186,6 +182,55 @@ class RobloxCharacter {
         // BOTTOM
         addFace(x1, y2, z2, x2, y2, z2, x1, y2, z1, x2, y2, z1,
                 convertU(uX), convertV(uY + hFront), convertU(uX + wFont), convertV(uY + hFront + dTop))
+    }
+
+    private fun addLimb(x1: Float, y1: Float, z1: Float, x2: Float, y2: Float, z2: Float, isRightLimb: Boolean) {
+        val tW = 585f
+        val tH = 559f
+        fun convertU(pixelX: Int): Float = pixelX / tW
+        fun convertV(pixelY: Int): Float = pixelY / tH 
+        
+        val wSide = 64
+        val hFront = 128
+        val dTop = 64
+        
+        val yBase = 355
+        
+        val uF: Int; val uL: Int; val uR: Int; val uB: Int; val uxTop: Int; val uxBot: Int
+        if (isRightLimb) {
+            uL = 19; uB = 85; uR = 151; uF = 217
+            uxTop = 217; uxBot = 217
+        } else {
+            uF = 308; uL = 374; uB = 440; uR = 506
+            uxTop = 308; uxBot = 308
+        }
+        
+        val vTop = yBase - dTop
+        val vBot = yBase + hFront
+
+        // FRONT
+        addFace(x1, y1, z2, x2, y1, z2, x1, y2, z2, x2, y2, z2,
+                convertU(uF), convertV(yBase), convertU(uF + wSide), convertV(yBase + hFront))
+        
+        // BACK
+        addFace(x2, y1, z1, x1, y1, z1, x2, y2, z1, x1, y2, z1,
+                convertU(uB), convertV(yBase), convertU(uB + wSide), convertV(yBase + hFront))
+        
+        // LEFT (Nhìn từ phía nhân vật)
+        addFace(x2, y1, z2, x2, y1, z1, x2, y2, z2, x2, y2, z1,
+                convertU(uL), convertV(yBase), convertU(uL + wSide), convertV(yBase + hFront))
+        
+        // RIGHT
+        addFace(x1, y1, z1, x1, y1, z2, x1, y2, z1, x1, y2, z2,
+                convertU(uR), convertV(yBase), convertU(uR + wSide), convertV(yBase + hFront))
+                
+        // TOP
+        addFace(x1, y1, z1, x2, y1, z1, x1, y1, z2, x2, y1, z2,
+                convertU(uxTop), convertV(vTop), convertU(uxTop + wSide), convertV(yBase))
+                
+        // BOTTOM
+        addFace(x1, y2, z2, x2, y2, z2, x1, y2, z1, x2, y2, z1,
+                convertU(uxBot), convertV(vBot), convertU(uxBot + wSide), convertV(vBot + dTop))
     }
 
     private fun addFace(xTL: Float, yTL: Float, zTL: Float, 
