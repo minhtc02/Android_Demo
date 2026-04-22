@@ -8,6 +8,15 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
 
+data class LimbPart(
+    val startVertex: Int,
+    val vertexCount: Int,
+    val pivotX: Float,
+    val pivotY: Float,
+    val pivotZ: Float,
+    val animType: Int // 0=None, 1=Swing Forward, 2=Swing Backward
+)
+
 class RobloxCharacter {
 
     private val vertexShaderCode = """
@@ -45,30 +54,50 @@ class RobloxCharacter {
 
     private val vertices = mutableListOf<Float>()
     private val uvs = mutableListOf<Float>()
+    private val parts = mutableListOf<LimbPart>()
+    
+    private var animationTime = 0f
 
     init {
+        // Hàm hỗ trợ để nhóm các vertices vào Part tương ứng
+        fun addPart(pivotX: Float, pivotY: Float, pivotZ: Float, animType: Int, buildBlock: () -> Unit) {
+            val start = vertices.size / 3
+            buildBlock()
+            val count = (vertices.size / 3) - start
+            parts.add(LimbPart(start, count, pivotX, pivotY, pivotZ, animType))
+        }
+
         // Xây dựng các khối cơ thể mô phỏng R6 character
-        // Kích thước chuẩn R6: Torso (2x2x1), Head (1x1x1), Limbs (1x2x1)
-        
         // Torso: Center(0, 0, 0), Width=2, Height=2, Depth=1
-        addBox(-1.0f, 1.0f, -0.5f, 1.0f, -1.0f, 0.5f, 
-               232, 74, 128, 128, 64, 64) // Torso UV
+        addPart(0f, 0f, 0f, 0) { // Không vung
+            addBox(-1.0f, 1.0f, -0.5f, 1.0f, -1.0f, 0.5f, 
+                   232, 74, 128, 128, 64, 64) // Torso UV
+        }
 
-        // Left Arm: Center(1.5, 0, 0), Width=1, Height=2, Depth=1
-        addLimb(1.0f, 1.0f, -0.5f, 2.0f, -1.0f, 0.5f, isRightLimb = false)
+        // Left Arm: Center(1.5, 0, 0), Pivot ngay tại vai (y=1.0)
+        addPart(1.5f, 1.0f, 0f, 1) { // Lắc tới
+            addLimb(1.0f, 1.0f, -0.5f, 2.0f, -1.0f, 0.5f, isRightLimb = true)
+        }
                
-        // Right Arm: Center(-1.5, 0, 0), Width=1, Height=2, Depth=1
-        addLimb(-2.0f, 1.0f, -0.5f, -1.0f, -1.0f, 0.5f, isRightLimb = true)
+        // Right Arm: Center(-1.5, 0, 0), Pivot ngay tại vai (y=1.0)
+        addPart(-1.5f, 1.0f, 0f, 2) { // Lắc lùi
+            addLimb(-2.0f, 1.0f, -0.5f, -1.0f, -1.0f, 0.5f, isRightLimb = false)
+        }
                
-        // Left Leg: Center(0.5, -2, 0), Width=1, Height=2, Depth=1
-        addLimb(0.0f, -1.0f, -0.5f, 1.0f, -3.0f, 0.5f, isRightLimb = false)
+        // Left Leg: Center(0.5, -2, 0), Pivot ngay tại hông (y=-1.0)
+        addPart(0.5f, -1.0f, 0f, 2) { // Đi ngược với Left Arm
+            addLimb(0.0f, -1.0f, -0.5f, 1.0f, -3.0f, 0.5f, isRightLimb = true)
+        }
                
-        // Right Leg: Center(-0.5, -2, 0), Width=1, Height=2, Depth=1
-        addLimb(-1.0f, -1.0f, -0.5f, 0.0f, -3.0f, 0.5f, isRightLimb = true)
+        // Right Leg: Center(-0.5, -2, 0), Pivot ngay tại hông (y=-1.0)
+        addPart(-0.5f, -1.0f, 0f, 1) { // Đi ngược với Right Arm
+            addLimb(-1.0f, -1.0f, -0.5f, 0.0f, -3.0f, 0.5f, isRightLimb = false)
+        }
 
-        // Head: Center(0, 1.5, 0), Cylinder: Radius=0.5, Height=1
-        // Đầu không nằm trong clothing template chuẩn nên set mapping vào một vùng màu để giả lập.
-        addCylinder(0.0f, 1.5f, 0.0f, 0.6f, 1.0f, 24, 0, 0, 10, 10) 
+        // Head: Center(0, 1.5, 0), Trục cổ (y=1.0)
+        addPart(0f, 1.0f, 0f, 0) { // Không vung
+            addCylinder(0.0f, 1.5f, 0.0f, 0.6f, 1.0f, 24, 0, 0, 10, 10) 
+        }
         
         val vertexArray = vertices.toFloatArray()
         vertexBuffer = ByteBuffer.allocateDirect(vertexArray.size * 4).run {
@@ -279,16 +308,39 @@ class RobloxCharacter {
             GLES20.glVertexAttribPointer(it, 2, GLES20.GL_FLOAT, false, uvStride, uvBuffer)
         }
         
-        mvpMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix").also {
-            GLES20.glUniformMatrix4fv(it, 1, false, mvpMatrix, 0)
-        }
+        mvpMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix")
         
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId)
         val texUniform = GLES20.glGetUniformLocation(mProgram, "uTexture")
         GLES20.glUniform1i(texUniform, 0)
         
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, vertices.size / 3)
+        animationTime += 0.05f
+        val swingMagnitude = 45f // Góc đi bộ 45 độ
+        val swingAngle = (Math.sin(animationTime.toDouble()) * swingMagnitude).toFloat()
+
+        for (part in parts) {
+            val modelMatrix = FloatArray(16)
+            android.opengl.Matrix.setIdentityM(modelMatrix, 0)
+
+            var rotX = 0f
+            if (part.animType == 1) rotX = swingAngle
+            else if (part.animType == 2) rotX = -swingAngle
+
+            if (rotX != 0f) {
+                // Di chuyển pivot về origin, xoay, rồi đẩy lại vị trí cũ
+                android.opengl.Matrix.translateM(modelMatrix, 0, part.pivotX, part.pivotY, part.pivotZ)
+                android.opengl.Matrix.rotateM(modelMatrix, 0, rotX, 1f, 0f, 0f)
+                android.opengl.Matrix.translateM(modelMatrix, 0, -part.pivotX, -part.pivotY, -part.pivotZ)
+            }
+
+            // Gộp matrix Animation local với MVP matrix global từ camera
+            val finalMVP = FloatArray(16)
+            android.opengl.Matrix.multiplyMM(finalMVP, 0, mvpMatrix, 0, modelMatrix, 0)
+
+            GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, finalMVP, 0)
+            GLES20.glDrawArrays(GLES20.GL_TRIANGLES, part.startVertex, part.vertexCount)
+        }
         
         GLES20.glDisableVertexAttribArray(positionHandle)
         GLES20.glDisableVertexAttribArray(texCoordHandle)
