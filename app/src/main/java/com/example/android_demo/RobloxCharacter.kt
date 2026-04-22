@@ -52,23 +52,23 @@ class RobloxCharacter {
         
         // Torso: Center(0, 0, 0), Width=2, Height=2, Depth=1
         addBox(-1.0f, 1.0f, -0.5f, 1.0f, -1.0f, 0.5f, 
-               232, 74, 128, 128, 128, 64) // Torso UV
+               232, 74, 128, 128, 64, 64) // Torso UV
 
         // Left Arm: Center(1.5, 0, 0), Width=1, Height=2, Depth=1
         addBox(1.0f, 1.0f, -0.5f, 2.0f, -1.0f, 0.5f,
-               167, 74, 64, 128, 64, 64) // Left arm UV approx (using right portion of template)
+               360, 74, 64, 128, 64, 64) // Left arm UV approx (using right portion of template)
                
         // Right Arm: Center(-1.5, 0, 0), Width=1, Height=2, Depth=1
         addBox(-2.0f, 1.0f, -0.5f, -1.0f, -1.0f, 0.5f,
-               44, 74, 64, 128, 64, 64) // Right arm UV
+               73, 74, 64, 128, 64, 64) // Right arm UV
                
         // Left Leg: Center(0.5, -2, 0), Width=1, Height=2, Depth=1
         addBox(0.0f, -1.0f, -0.5f, 1.0f, -3.0f, 0.5f,
-               167, 332, 64, 128, 64, 64) // Left leg UV approx
+               360, 332, 64, 128, 64, 64) // Left leg UV approx
                
         // Right Leg: Center(-0.5, -2, 0), Width=1, Height=2, Depth=1
         addBox(-1.0f, -1.0f, -0.5f, 0.0f, -3.0f, 0.5f,
-               44, 332, 64, 128, 64, 64) // Right leg UV
+               73, 332, 64, 128, 64, 64) // Right leg UV
 
         // Head: Center(0, 1.5, 0), Cylinder: Radius=0.5, Height=1
         // Đầu không nằm trong clothing template chuẩn nên set mapping vào một vùng màu để giả lập.

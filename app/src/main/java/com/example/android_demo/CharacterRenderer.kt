@@ -37,7 +37,7 @@ class CharacterRenderer(private val context: Context, private val textureResId: 
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
         
         // Cấu hình View (Camera) lùi xa hơn để nhân vật trông nhỏ lại
-        Matrix.setLookAtM(viewMatrix, 0, 0f, 0f, -14f, 0f, 0f, 0f, 0f, 1.0f, 0.0f)
+        Matrix.setLookAtM(viewMatrix, 0, 0f, 0f, 14f, 0f, 0f, 0f, 0f, 1.0f, 0.0f)
         
         // Quay mô hình
         val scratch = FloatArray(16)
