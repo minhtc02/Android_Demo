@@ -17,7 +17,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         
         // Bạn có thể đổi R.drawable.draw thành id của tệp texture quần áo bạn tải lên res/drawable
-        val textureResId = R.drawable.frog
+        val textureResId = R.drawable.image_1
         
         // Hiển thị ảnh 2D
         binding.imgTexture.setImageResource(textureResId)
